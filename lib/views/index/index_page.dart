@@ -28,12 +28,12 @@ class _IndexPageState extends State<IndexPage> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         AppBarTabsItem(
-            icon: Icons.favorite,
+            icon: Icons.web,
             text: "库存查询",
             color: Theme.of(context).primaryColor.withOpacity(0.8),
             router: StockPage()),
         AppBarTabsItem(
-            icon: Icons.person,
+            icon: Icons.wallpaper,
             text: "图纸查询",
             color: Colors.green.withOpacity(0.7),
             router: DrawingPage()),

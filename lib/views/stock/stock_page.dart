@@ -1,9 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:ffzwmxy/model/currency_entity.dart';
-import 'package:ffzwmxy/model/submit_entity.dart';
-import 'package:ffzwmxy/utils/refresh_widget.dart';
-import 'package:ffzwmxy/utils/text.dart';
 import 'package:ffzwmxy/utils/toast_util.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -32,7 +29,7 @@ class _StockPageState extends State<StockPage> {
   StreamSubscription _subscription;
   var _code;
   List<dynamic> orderDate = [];
-
+  final controller = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -46,6 +43,7 @@ class _StockPageState extends State<StockPage> {
 
   @override
   void dispose() {
+    this.controller.dispose();
     super.dispose();
 
     /// 取消监听
@@ -120,6 +118,7 @@ class _StockPageState extends State<StockPage> {
     _code = event;
     EasyLoading.show(status: 'loading...');
     keyWord = _code;
+    this.controller.text = _code;
     await getOrderList();
     /*});*/
   }
@@ -167,7 +166,7 @@ class _StockPageState extends State<StockPage> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = TextEditingController();
+
     return FlutterEasyLoading(
       /*child: MaterialApp(
       title: "loging",*/
@@ -212,7 +211,7 @@ class _StockPageState extends State<StockPage> {
                                         child: Container(
                                           alignment: Alignment.center,
                                           child: TextField(
-                                            controller: controller,
+                                            controller:  this.controller,
                                             decoration: new InputDecoration(
                                                 contentPadding:
                                                 EdgeInsets.only(
@@ -222,7 +221,7 @@ class _StockPageState extends State<StockPage> {
                                             onSubmitted: (value) {
                                               setState(() {
                                                 this.getOrderList();
-                                                print(value);
+
                                               });
                                             },
                                             // onChanged: onSearchTextChanged,
@@ -234,7 +233,7 @@ class _StockPageState extends State<StockPage> {
                                         color: Colors.grey,
                                         iconSize: 18.0,
                                         onPressed: () {
-                                          controller.clear();
+                                          this.controller.clear();
                                           // onSearchTextChanged('');
                                         },
                                       ),
