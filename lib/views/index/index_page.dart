@@ -3,6 +3,7 @@ import 'package:english_words/english_words.dart';
 import 'package:ffzwmxy/views/login/login_page.dart';
 import 'package:ffzwmxy/views/stock/stock_page.dart';
 import 'package:ffzwmxy/views/drawing/drawing_page.dart';
+import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class IndexPage extends StatefulWidget {
@@ -41,7 +42,7 @@ class _IndexPageState extends State<IndexPage> {
     );
   }
 
-  void _pushSaved() {
+  void _pushSaved() async{
     /* Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -51,6 +52,9 @@ class _IndexPageState extends State<IndexPage> {
         },
       ),
     );*/
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String version = packageInfo.version;//版本号
+    String buildNumber = packageInfo.buildNumber;//版本构建号
     Navigator.of(context).push(
       new MaterialPageRoute(
         builder: (context) {
@@ -62,7 +66,7 @@ class _IndexPageState extends State<IndexPage> {
             body: new ListView(padding: EdgeInsets.all(10), children: <Widget>[
               ListTile(
                 leading: Icon(Icons.search),
-                title: Text('版本信息'),
+                title: Text('版本信息（$version）'),
               ),
               Divider(
                 height: 10.0,

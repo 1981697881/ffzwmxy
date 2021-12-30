@@ -202,6 +202,7 @@ class _DrawingPageState extends State<DrawingPage> {
                                             border: InputBorder.none),
                                         onSubmitted: (value) {
                                           setState(() {
+                                            this.keyWord  = value;
                                             this.getOrderList();
                                           });
                                         },

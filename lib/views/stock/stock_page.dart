@@ -242,6 +242,7 @@ class _StockPageState extends State<StockPage> {
                                                 border: InputBorder.none),
                                             onSubmitted: (value) {
                                               setState(() {
+                                                this.keyWord  = value;
                                                 this.getOrderList();
 
                                               });
