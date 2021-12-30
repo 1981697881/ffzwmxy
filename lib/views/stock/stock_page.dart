@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:qrscan/qrscan.dart' as scanner;
 
 final String _fontFamily = Platform.isWindows ? "Roboto" : "";
 
@@ -24,21 +25,23 @@ class _StockPageState extends State<StockPage> {
   final divider = Divider(height: 1, indent: 20);
   final rightIcon = Icon(Icons.keyboard_arrow_right);
   final scanIcon = Icon(Icons.filter_center_focus);
+
   static const scannerPlugin =
       const EventChannel('com.shinow.pda_scanner/plugin');
   StreamSubscription _subscription;
   var _code;
+
   List<dynamic> orderDate = [];
   final controller = TextEditingController();
   @override
   void initState() {
     super.initState();
     /// 开启监听
-    if (_subscription == null) {
+   /* if (_subscription == null) {
       _subscription = scannerPlugin
           .receiveBroadcastStream()
           .listen(_onEvent, onError: _onError);
-    }
+    }*/
   }
 
   @override
@@ -47,9 +50,9 @@ class _StockPageState extends State<StockPage> {
     super.dispose();
 
     /// 取消监听
-    if (_subscription != null) {
+    /*if (_subscription != null) {
       _subscription.cancel();
-    }
+    }*/
   }
 
   // 集合
@@ -164,6 +167,20 @@ class _StockPageState extends State<StockPage> {
     return tempList;
   }
 
+//扫码函数,最简单的那种
+  Future scan() async {
+    String cameraScanResult = await scanner.scan(); //通过扫码获取二维码中的数据
+    getScan(cameraScanResult); //将获取到的参数通过HTTP请求发送到服务器
+    print(cameraScanResult); //在控制台打印
+  }
+
+//用于验证数据(也可以在控制台直接打印，但模拟器体验不好)
+  void getScan(String scan) async {
+    keyWord = scan;
+    this.controller.text = scan;
+    await getOrderList();
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -171,6 +188,11 @@ class _StockPageState extends State<StockPage> {
       /*child: MaterialApp(
       title: "loging",*/
       child: Scaffold(
+          floatingActionButton: FloatingActionButton(
+            onPressed: scan,
+            tooltip: 'Increment',
+            child: Icon(Icons.filter_center_focus),
+          ),
           appBar: AppBar(
             /* leading: IconButton(
               icon: Icon(Icons.arrow_back),
@@ -215,7 +237,7 @@ class _StockPageState extends State<StockPage> {
                                             decoration: new InputDecoration(
                                                 contentPadding:
                                                 EdgeInsets.only(
-                                                    bottom: 8.0),
+                                                    bottom: 12.0),
                                                 hintText: '输入关键字',
                                                 border: InputBorder.none),
                                             onSubmitted: (value) {

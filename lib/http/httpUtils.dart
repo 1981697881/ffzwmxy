@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'http.dart';
-import 'app_exceptions.dart';
 import 'cache.dart';
 
 class HttpUtils {

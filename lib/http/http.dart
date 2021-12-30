@@ -1,17 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:connectivity/connectivity.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'net_cache.dart';
 import 'proxy.dart';
-import 'retry_interceptor.dart';
 
 import 'cache.dart';
-import 'connectivity_request_retrier.dart';
 import 'error_interceptor.dart';
 import 'global.dart';
 
