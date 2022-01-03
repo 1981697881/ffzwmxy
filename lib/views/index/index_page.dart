@@ -37,7 +37,7 @@ class _IndexPageState extends State<IndexPage> {
   String buildVersion = '';
   String buildUpdateDescription = '';
   ProgressDialog pr;
-  String apkName = 'fzwm_landy.apk';
+  String apkName = '';
   String appPath = '';
   ReceivePort _port = ReceivePort();
 
@@ -81,6 +81,7 @@ class _IndexPageState extends State<IndexPage> {
       var currentVersionCode = packageInfo.buildNumber;
       if (int.parse(serviceVersionCode) > int.parse(currentVersionCode)) {
         _showNewVersionAppDialog();
+        this.apkName="鑫源PDA_"+buildVersion+".apk";
       }else{
         ToastUtil.showInfo('当前已经是最新版');
       }
