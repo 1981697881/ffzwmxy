@@ -12,12 +12,16 @@ import 'package:ffzwmxy/utils/toast_util.dart';
 import 'package:ffzwmxy/server/api.dart';
 import 'package:ffzwmxy/http/api_response.dart';
 import 'model/currency_entity.dart';
-
+import 'package:flutter_downloader/flutter_downloader.dart';
 const Color _primaryColor = Colors.blue;
 
-void main(List<String> args) {
+void main(List<String> args) async{
   HttpUtils.init(
     baseUrl: "http://61.146.130.53:50252/K3Cloud/",
+  );
+  WidgetsFlutterBinding.ensureInitialized();
+  await FlutterDownloader.initialize(
+      debug: true
   );
   runApp(MyApp());
   if (Platform.isAndroid) {
@@ -175,6 +179,16 @@ class _MyHomePageState extends State {
               ),
             );
           }
+        }else{
+          ToastUtil.showInfo('该账号不存在');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return LoginPage();
+              },
+            ),
+          );
         }
       } else {
         ToastUtil.showInfo('登录失败，重新登录');

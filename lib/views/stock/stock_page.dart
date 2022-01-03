@@ -65,7 +65,7 @@ class _StockPageState extends State<StockPage> {
       }
       userMap['FormId'] = 'STK_Inventory';
       userMap['FieldKeys'] =
-          'FMaterialId.FNumber,FMaterialId.FName,FMaterialId.FSpecification,FStockId.FName,FBaseQty';
+          'FMaterialId.FNumber,FMaterialId.FName,FMaterialId.FSpecification,FStockId.FName,FStockLocId.FF100011.FName,FBaseQty';
       Map<String, dynamic> dataMap = Map();
       dataMap['data'] = userMap;
       String order = await CurrencyEntity.polling(dataMap);
@@ -97,9 +97,14 @@ class _StockPageState extends State<StockPage> {
             "value": {"label": value[3], "value": value[3]}
           });
           arr.add({
+            "title": "仓位",
+            "name": "FStockLocId",
+            "value": {"label": value[4], "value": value[4]}
+          });
+          arr.add({
             "title": "库存数量",
             "name": "FBaseQty",
-            "value": {"label": value[4], "value": value[4]}
+            "value": {"label": value[5], "value": value[5]}
           });
           hobby.add(arr);
         });

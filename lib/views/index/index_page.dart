@@ -1,11 +1,21 @@
+import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
+
+import 'package:ffzwmxy/http/api_response.dart';
+import 'package:ffzwmxy/model/version_entity.dart';
+import 'package:ffzwmxy/utils/toast_util.dart';
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import 'package:ffzwmxy/views/login/login_page.dart';
 import 'package:ffzwmxy/views/stock/stock_page.dart';
 import 'package:ffzwmxy/views/drawing/drawing_page.dart';
 import 'package:package_info/package_info.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 class IndexPage extends StatefulWidget {
   IndexPage({
     Key key,
@@ -21,7 +31,176 @@ class _IndexPageState extends State<IndexPage> {
 
   // 承载listView的滚动视图
   ScrollController _scrollController = ScrollController();
+  //自动更新字段
+  String serviceVersionCode = '';
+  String downloadUrl = '';
+  String buildVersion = '';
+  String buildUpdateDescription = '';
+  ProgressDialog pr;
+  String apkName = 'fzwm_landy.apk';
+  String appPath = '';
+  ReceivePort _port = ReceivePort();
 
+
+  @override
+  void initState() {
+    super.initState();
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port');
+    _port.listen(_updateDownLoadInfo);
+    FlutterDownloader.registerCallback(_downLoadCallback);
+    afterFirstLayout(context);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  void afterFirstLayout(BuildContext context) {
+    // 如果是android，则执行热更新
+    if (Platform.isAndroid) {
+      _getNewVersionAPP(context);
+    }
+  }
+
+  /// 执行版本更新的网络请求
+  _getNewVersionAPP(context) async {
+    ApiResponse<VersionEntity> entity = await VersionEntity.getVersion();
+    serviceVersionCode = entity.data.data.buildVersionNo;
+    buildVersion = entity.data.data.buildVersion;
+    buildUpdateDescription = entity.data.data.buildUpdateDescription;
+    downloadUrl = entity.data.data.downloadUrl;
+    _checkVersionCode();
+  }
+
+  /// 检查当前版本是否为最新，若不是，则更新
+  void _checkVersionCode() {
+    PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+      var currentVersionCode = packageInfo.buildNumber;
+      if (int.parse(serviceVersionCode) > int.parse(currentVersionCode)) {
+        _showNewVersionAppDialog();
+      }else{
+        ToastUtil.showInfo('当前已经是最新版');
+      }
+    });
+  }
+
+  /// 版本更新提示对话框
+  Future<void> _showNewVersionAppDialog() async {
+    return showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: new Row(
+              children: <Widget>[
+                new Padding(
+                    padding: const EdgeInsets.fromLTRB(30.0, 0.0, 10.0, 0.0),
+                    child: new Text("发现新版本"))
+              ],
+            ),
+            content: new Text(
+                buildUpdateDescription + "（" + buildVersion + ")"
+            ),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text('下次再说'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              new FlatButton(
+                child: new Text('立即更新'),
+                onPressed: () {
+                  _doUpdate(context);
+                },
+              )
+            ],
+          );
+        });
+  }
+
+
+  /// 执行更新操作
+  _doUpdate(BuildContext context) async {
+    Navigator.pop(context);
+    _executeDownload(context);
+  }
+
+  /// 下载最新apk包
+  Future<void> _executeDownload(BuildContext context) async {
+    pr = new ProgressDialog(
+      context,
+      type: ProgressDialogType.Download,
+      isDismissible: true,
+      showLogs: true,
+    );
+    pr.style(message: '准备下载...');
+    if (!pr.isShowing()) {
+      pr.show();
+    }
+
+    final path = await _apkLocalPath;
+    await FlutterDownloader.enqueue(
+        url: downloadUrl,
+        savedDir: path,
+        fileName: apkName,
+        showNotification: true,
+        openFileFromNotification: true
+    );
+  }
+
+  /// 下载进度回调函数
+  static void _downLoadCallback(String id, DownloadTaskStatus status,
+      int progress) {
+    final SendPort send = IsolateNameServer.lookupPortByName(
+        'downloader_send_port');
+    send.send([id, status, progress]);
+  }
+
+  /// 更新下载进度框
+  _updateDownLoadInfo(dynamic data) {
+    DownloadTaskStatus status = data[1];
+    int progress = data[2];
+    if (status == DownloadTaskStatus.running) {
+      pr.update(
+          progress: double.parse(progress.toString()), message: "下载中，请稍后…");
+    }
+    if (status == DownloadTaskStatus.failed) {
+      if (pr.isShowing()) {
+        pr.hide();
+      }
+    }
+
+    if (status == DownloadTaskStatus.complete) {
+      if (pr.isShowing()) {
+        pr.hide();
+      }
+      _installApk();
+    }
+  }
+
+  /// 安装apk
+  Future<Null> _installApk() async {
+    await OpenFile.open(appPath + '/' + apkName);
+  }
+
+  /// 获取apk存储位置
+  Future<String> get _apkLocalPath async {
+    final directory = await getExternalStorageDirectory();
+    String path = directory.path + Platform.pathSeparator + 'Download';
+    final savedDir = Directory(path);
+    bool hasExisted = await savedDir.exists();
+    if (!hasExisted) {
+      await savedDir.create();
+    }
+    this.setState(() {
+      appPath = path;
+    });
+    return path;
+  }
   // tabs 容器
   Widget buildAppBarTabs() {
     return Row(
@@ -67,6 +246,9 @@ class _IndexPageState extends State<IndexPage> {
               ListTile(
                 leading: Icon(Icons.search),
                 title: Text('版本信息（$version）'),
+                onTap: () async {
+                  afterFirstLayout(context);
+                },
               ),
               Divider(
                 height: 10.0,

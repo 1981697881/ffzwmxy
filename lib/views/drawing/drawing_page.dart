@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ffzwmxy/model/currency_entity.dart';
 import 'package:ffzwmxy/utils/toast_util.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
-
+import 'package:url_launcher/url_launcher.dart';
 class DrawingPage extends StatefulWidget {
   DrawingPage({Key key}) : super(key: key);
 
@@ -67,7 +67,9 @@ class _DrawingPageState extends State<DrawingPage> {
       _subscription.cancel();
     }*/
   }
+  Future _alterDialog(){
 
+  }
   getOrderList() async {
     Map<String, dynamic> userMap = Map();
     userMap['FilterString'] =
@@ -82,13 +84,47 @@ class _DrawingPageState extends State<DrawingPage> {
     if (orderDate.length > 0) {
       print(orderDate);
       pdfUrl = orderDate[0][0];
-      Navigator.push(
+      var url = "https://tz.xinyuanhengye.cn:8088/tz.html?file=$pdfUrl.pdf";
+      showDialog(
+        context: context,
+        barrierDismissible: true, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('温馨提醒'),
+            content:Text('需要打开浏览器查询'),
+            actions:<Widget>[
+              FlatButton(
+                child: Text('打开'),
+                onPressed: () async{
+                  if (await canLaunch(url)) {
+                  await launch(url);
+                  } else {
+                  throw 'Could not launch $url';
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: Text('不了'),
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+            elevation: 20,
+            // 设置成 圆角
+            shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          );
+        },
+      );
+
+      /*Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => PDFScreen(
                 pathPDF:
                     "https://tz.xinyuanhengye.cn:8088/tz.html?file=$pdfUrl.pdf")),
-      );
+      );*/
       /*createFileOfPdfUrl().then((f) {
         setState(() {
           pathPDF = f.path;
@@ -141,6 +177,7 @@ class _DrawingPageState extends State<DrawingPage> {
     await file.writeAsBytes(bytes);
     return file;
   }
+
 //扫码函数,最简单的那种
   Future scan() async {
     String cameraScanResult = await scanner.scan(); //通过扫码获取二维码中的数据
@@ -154,6 +191,7 @@ class _DrawingPageState extends State<DrawingPage> {
     this.controller.text = scan;
     await getOrderList();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -202,7 +240,7 @@ class _DrawingPageState extends State<DrawingPage> {
                                             border: InputBorder.none),
                                         onSubmitted: (value) {
                                           setState(() {
-                                            this.keyWord  = value;
+                                            this.keyWord = value;
                                             this.getOrderList();
                                           });
                                         },
@@ -236,7 +274,6 @@ class _DrawingPageState extends State<DrawingPage> {
 // ignore: must_be_immutable
 class PDFScreen extends StatelessWidget {
   final String pathPDF;
-
   PDFScreen({@required this.pathPDF});
 
   @override
@@ -247,7 +284,7 @@ class PDFScreen extends StatelessWidget {
       ),
       url: pathPDF,
       // 登录的URL
-      withZoom: true,
+      withZoom: false,
       // 允许网页缩放
       withLocalStorage: true,
       // 允许LocalStorage
